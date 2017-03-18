@@ -3,6 +3,12 @@
 ## Version 1.14
 
 *   Automatisches Ausfüllen der Kurs Beschreibung wenn ein Kurstyp gewählt wird.
+*   Admin kann gelöschte Personen in der Volltextsuche finden.
+*   Anfrageverfahren wird für gelöschte Personen ebenfalls ausgelöst.
+*   Gelöschte Personen können pro Ebene angezeigt werden.
+*   Benutzer/-innen können personalisierte Etiketten erstellen.
+*   Übername und ein P.P. Post Feld können den Etiketten hinzugefügt werden.
+*   Globale Suche nach Anlassnamen und Kursnummern.
 
 ## Version 1.13
 
