@@ -315,6 +315,13 @@ describe Group do
       expect(group.children).to be_present
       expect(group.children.first.layer_group_id).to eq group.id
     end
+
+    it 'sets the layer group on all descendants if parent changes' do
+      group = groups(:bottom_group_one_one)
+      group.update!(parent_id: groups(:bottom_layer_two).id)
+      expect(group.reload.layer_group_id).to eq(groups(:bottom_layer_two).id)
+      expect(groups(:bottom_group_one_one_one).layer_group_id).to eq(groups(:bottom_layer_two).id)
+    end
   end
 
   context '#destroy' do
@@ -403,5 +410,22 @@ describe Group do
 
   end
 
+  context 'invoice_config' do
+    let (:parent) { groups(:top_layer) }
 
+    it 'is created for layer group' do
+      group = Fabricate(Group::BottomLayer.sti_name, name: 'g', parent: parent)
+      expect(group.invoice_config).to be_present
+    end
+
+    it 'is not created for non layer group' do
+      group = Fabricate(Group::TopGroup.sti_name, name: 'g', parent: parent)
+      expect(group.invoice_config).not_to be_present
+    end
+
+    it 'is destroyed group when group gets destroyed' do
+      group = Fabricate(Group::BottomLayer.sti_name, name: 'g', parent: parent)
+      expect { group.destroy }.to change { InvoiceConfig.count }.by(-1)
+    end
+  end
 end

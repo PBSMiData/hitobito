@@ -1,6 +1,6 @@
 # encoding: utf-8
 
-#  Copyright (c) 2012-2014, Jungwacht Blauring Schweiz. This file is part of
+#  Copyright (c) 2012-2017, Jungwacht Blauring Schweiz. This file is part of
 #  hitobito and licensed under the Affero General Public License version 3
 #  or later. See the COPYING file at the top-level directory or at
 #  https://github.com/hitobito/hitobito.
@@ -28,10 +28,11 @@ gem 'faker', '< 1.6.4' # uses 2.0 for testing (no explicit requirement, yet)
 gem 'globalize'
 gem 'haml'
 gem 'http_accept_language'
+gem 'icalendar'
 gem 'magiclabs-userstamp', require: 'userstamp'
 gem 'mime-types', '~> 2.6.2' # newer requires ruby 2.0
 gem 'mini_magick'
-gem 'mysql2', '0.3.15' # 0.3.16 fails sphinx specs on jenkins
+gem 'mysql2', '0.4.9'
 gem 'nested_form'
 gem 'oat'
 gem 'paper_trail'
@@ -44,12 +45,14 @@ gem 'rack'
 gem 'rails_autolink'
 gem 'config', '< 1.1.0' # requires ruby 2
 gem 'rails-i18n'
+gem 'rubyzip'
 gem 'seed-fu'
 gem 'simpleidn'
 gem 'sqlite3' # for development, test and production when generating assets
 gem 'thinking-sphinx'
 gem 'validates_by_schema'
 gem 'validates_timeliness', '< 4.0'
+gem 'vcard'
 gem 'wagons'
 
 # load after others because of active record inherited alias chain.
@@ -98,6 +101,7 @@ end
 
 group :test do
   gem 'capybara'
+  gem 'capybara-screenshot'
   gem 'database_cleaner'
   gem 'fabrication'
   gem 'headless'
@@ -105,7 +109,6 @@ group :test do
   gem 'rspec-its'
   gem 'rspec-collection_matchers'
   gem 'selenium-webdriver', '2.51.0' # 3.2.2 fails with "Unable to find Mozilla geckodriver"
-  gem 'timecop'
   gem 'pdf-inspector', require: 'pdf/inspector'
 end
 
@@ -125,7 +128,7 @@ group :metrics do
   gem 'brakeman'
   gem 'ci_reporter_rspec'
   gem 'rails-erd'
-  gem 'rubocop', '< 0.42' # require ruby 2.0
+  gem 'rubocop'
   gem 'rubocop-checkstyle_formatter'
   gem 'ruby-prof'
   gem 'simplecov-rcov'
@@ -136,4 +139,4 @@ end
 #
 # To create a Wagonfile suitable for development, run 'rake wagon:file'
 wagonfile = File.expand_path('../Wagonfile', __FILE__)
-eval(File.read(wagonfile)) if File.exist?(wagonfile) # rubocop:disable Lint/Eval
+eval(File.read(wagonfile)) if File.exist?(wagonfile) # rubocop:disable Security/Eval

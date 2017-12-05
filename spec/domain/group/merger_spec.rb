@@ -1,6 +1,6 @@
 # encoding: utf-8
 
-#  Copyright (c) 2012-2013, Jungwacht Blauring Schweiz. This file is part of
+#  Copyright (c) 2012-2017, Jungwacht Blauring Schweiz. This file is part of
 #  hitobito and licensed under the Affero General Public License version 3
 #  or later. See the COPYING file at the top-level directory or at
 #  https://github.com/hitobito/hitobito.
@@ -13,6 +13,10 @@ describe Group::Merger do
   let(:group2) { groups(:bottom_layer_two) }
   let(:other_group) { groups(:top_layer) }
 
+  let(:merger) { Group::Merger.new(group1, group2, 'foo') }
+
+  let(:new_group) { Group.find(merger.new_group.id) }
+
   context 'merge groups' do
 
     before do
@@ -24,17 +28,18 @@ describe Group::Merger do
       Fabricate(:event, groups: [group1])
       Fabricate(:event, groups: [group1])
       Fabricate(:event, groups: [group2])
+
+      group2.create_invoice_config!
+      Fabricate(:invoice, group: group2, recipient: @person)
+      Fabricate(:invoice_article, group: group2)
     end
 
     it 'creates a new group and merges roles, events' do
-      merge = Group::Merger.new(group1, group2, 'foo')
-      expect(merge.group2_valid?).to eq true
+      expect(merger.group2_valid?).to eq true
+      merger.merge!
 
-      merge.merge!
-
-      new_group = Group.find(merge.new_group.id)
       expect(new_group.name).to eq 'foo'
-      expect(new_group.type).to eq merge.new_group.type
+      expect(new_group.type).to eq merger.new_group.type
 
       expect(new_group.children.count).to eq 3
 
@@ -66,20 +71,36 @@ describe Group::Merger do
 
     it 'add events from both groups only once' do
       e = Fabricate(:event, groups: [group1, group2])
-      merge = Group::Merger.new(group1, group2, 'foo')
-      merge.merge!
+      merger.merge!
 
       e.reload
-      expect(e.group_ids).to match_array([group1, group2, merge.new_group].collect(&:id))
+      expect(e.group_ids).to match_array([group1, group2, new_group].collect(&:id))
     end
 
-    it 'updates layer_group_id for children' do
-      merge = Group::Merger.new(group1, group2, 'foo')
-      merge.merge!
+    it 'updates layer_group_id for descendants' do
+      ids = (group1.descendants + group2.descendants).map(&:id)
 
-      new_group = Group.find(merge.new_group.id)
-      expect(group1.children.map(&:layer_group_id).uniq).to eq [new_group.id]
-      expect(group2.children.map(&:layer_group_id).uniq).to eq [new_group.id]
+      merger.merge!
+
+      expect(Group.find(ids).map(&:layer_group_id).uniq).to eq [new_group.id]
+    end
+
+    it 'moves invoices' do
+      expect(group1.invoices.count).to eq 2
+      expect(group2.invoices.count).to eq 1
+
+      merger.merge!
+
+      expect(new_group.invoices.count).to eq 3
+    end
+
+    it 'moves invoice-articles' do
+      expect(group1.invoice_articles.count).to eq 3
+      expect(group2.invoice_articles.count).to eq 1
+
+      merger.merge!
+
+      expect(new_group.invoice_articles.count).to eq 4
     end
 
   end

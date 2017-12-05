@@ -7,16 +7,11 @@
 
 module GroupsHelper
 
-  def new_event_button
-    event_type = find_event_type
-    return unless event_type
-
-    event = event_type.new
-    event.groups << @group
-    if can?(:new, event)
-      action_button(t("events.global.link.add_#{event_type.name.underscore}"),
-                    new_group_event_path(@group, event: { type: event_type.sti_name }),
-                    :plus)
+  def export_events_ical_button
+    type = params[:type].presence || 'Event'
+    if can?(:"export_#{type.underscore.pluralize}", @group)
+      action_button(I18n.t('event.lists.courses.ical_export_button'),
+        params.merge(format: :ics), :calendar)
     end
   end
 
@@ -33,14 +28,6 @@ module GroupsHelper
     count = Person::AddRequest.for_layer(group).count
     label << " (#{count})" if count > 0
     label.html_safe
-  end
-
-  private
-
-  def find_event_type
-    @group.event_types.find do |t|
-      (params[:type].blank? && t == Event) || t.sti_name == params[:type]
-    end
   end
 
 end

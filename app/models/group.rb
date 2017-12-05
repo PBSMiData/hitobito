@@ -1,9 +1,10 @@
 # encoding: utf-8
 
-#  Copyright (c) 2012-2013, Jungwacht Blauring Schweiz. This file is part of
+#  Copyright (c) 2012-2017, Jungwacht Blauring Schweiz. This file is part of
 #  hitobito and licensed under the Affero General Public License version 3
 #  or later. See the COPYING file at the top-level directory or at
 #  https://github.com/hitobito/hitobito.
+
 # == Schema Information
 #
 # Table name: groups
@@ -36,8 +37,8 @@ class Group < ActiveRecord::Base
   MINIMAL_SELECT = %w(id name type parent_id lft rgt layer_group_id deleted_at).
                    collect { |a| "groups.#{a}" }
 
-  include Group::Types
   include Group::NestedSet
+  include Group::Types
   include Contactable
 
   acts_as_paranoid
@@ -61,6 +62,7 @@ class Group < ActiveRecord::Base
 
   before_save :reset_contact_info
 
+
   # Root group may not be destroyed
   protect_if :root?
   protect_if :children_without_deleted
@@ -81,11 +83,20 @@ class Group < ActiveRecord::Base
   has_many :mailing_lists, dependent: :destroy
   has_many :subscriptions, as: :subscriber, dependent: :destroy
 
+  has_many :notes, as: :subject, dependent: :destroy
+
   has_many :person_add_requests,
            foreign_key: :body_id,
            inverse_of: :body,
            class_name: 'Person::AddRequest::Group',
            dependent: :destroy
+
+  has_one :invoice_config, dependent: :destroy
+  has_many :invoices, dependent: :destroy
+  has_many :invoice_articles, dependent: :destroy
+  has_many :invoice_items, through: :invoices
+
+  after_create :create_invoice_config, if: :layer?
 
   ### VALIDATIONS
 
@@ -151,7 +162,7 @@ class Group < ActiveRecord::Base
   end
 
   # create alias to call it again
-  alias_method :hard_destroy, :really_destroy!
+  alias hard_destroy really_destroy!
   def really_destroy!
     # run nested_set callback on hard destroy
     destroy_descendants_without_paranoia
@@ -188,5 +199,9 @@ class Group < ActiveRecord::Base
     # do not destroy descendants on soft delete
   end
   alias_method_chain :destroy_descendants, :paranoia
+
+  def create_invoice_config
+    create_invoice_config!
+  end
 
 end

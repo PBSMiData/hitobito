@@ -22,6 +22,18 @@ module Sheet
         :log_group_person_path,
         if: :log
 
+    tab 'people.tabs.colleagues',
+        :colleagues_group_person_path,
+        if: (lambda do |_view, _group, person|
+          person.company_name?
+        end)
+
+    tab 'people.tabs.invoices',
+        :invoices_group_person_path,
+        if: (lambda do |view, group, person|
+          view.can?(:index_invoices, group) || view.can?(:index_invoices, person)
+        end)
+
     def link_url
       view.group_person_path(parent_sheet.entry.id, entry.id)
     end
